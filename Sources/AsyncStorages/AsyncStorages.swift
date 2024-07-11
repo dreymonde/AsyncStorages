@@ -1,2 +1,11 @@
-// The Swift Programming Language
-// https://docs.swift.org/swift-book
+
+internal func shallows_print(_ item: Any) {
+    if ShallowsLog.isEnabled {
+        print(item)
+    }
+}
+
+public enum ShallowsLog {
+    public static var isEnabled = false
+}
+
