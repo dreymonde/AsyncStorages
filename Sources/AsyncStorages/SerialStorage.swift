@@ -82,7 +82,7 @@ public final class SerialReadOnlyStorage<Underlying: ReadableStorage>: ReadOnlyS
     }
 }
 
-public final class SerialWriteOnlyStorage<Underlying: WriteableStorage>: WriteOnlyStorage {
+public final class SerialWriteOnlyStorage<Underlying: WritableStorage>: WriteOnlyStorage {
     public let underlyingStorage: Underlying
     public let asyncQueue = StoragesAsyncQueue()
     

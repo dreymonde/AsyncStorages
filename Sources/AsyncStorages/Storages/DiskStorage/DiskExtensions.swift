@@ -15,7 +15,7 @@ extension Storage where Value == Data {
     ) -> some Storage<Key, Any> {
         transformingStorages(
             readable: { $0.mapJSON(options: readingOptions) },
-            writeable: { $0.mapJSON(options: writingOptions) }
+            writable: { $0.mapJSON(options: writingOptions) }
         )
     }
     
@@ -25,7 +25,7 @@ extension Storage where Value == Data {
     ) -> some Storage<Key, [String : Any]> {
         transformingStorages(
             readable: { $0.mapJSONDictionary(options: readingOptions) },
-            writeable: { $0.mapJSONDictionary(options: writingOptions) }
+            writable: { $0.mapJSONDictionary(options: writingOptions) }
         )
     }
     
@@ -36,7 +36,7 @@ extension Storage where Value == Data {
     ) -> some Storage<Key, JSONObject> {
         transformingStorages(
             readable: { $0.mapJSONObject(objectType, decoder: decoder) },
-            writeable: { $0.mapJSONObject(objectType, encoder: encoder) }
+            writable: { $0.mapJSONObject(objectType, encoder: encoder) }
         )
     }
     
@@ -47,7 +47,7 @@ extension Storage where Value == Data {
     ) -> some Storage<Key, Any> {
         transformingStorages(
             readable: { $0.mapPlist(format: format, options: readOptions) },
-            writeable: { $0.mapPlist(format: format, options: writeOptions) }
+            writable: { $0.mapPlist(format: format, options: writeOptions) }
         )
     }
     
@@ -58,7 +58,7 @@ extension Storage where Value == Data {
     ) -> some Storage<Key, [String : Any]> {
         transformingStorages(
             readable: { $0.mapPlistDictionary(format: format, options: readOptions) },
-            writeable: { $0.mapPlistDictionary(format: format, options: writeOptions) }
+            writable: { $0.mapPlistDictionary(format: format, options: writeOptions) }
         )
     }
     
@@ -69,14 +69,14 @@ extension Storage where Value == Data {
     ) -> some Storage<Key, PlistObject> {
         transformingStorages(
             readable: { $0.mapPlistObject(objectType, decoder: decoder) },
-            writeable: { $0.mapPlistObject(objectType, encoder: encoder) }
+            writable: { $0.mapPlistObject(objectType, encoder: encoder) }
         )
     }
     
     public func mapString(withEncoding encoding: String.Encoding = .utf8) -> some Storage<Key, String> {
         transformingStorages(
             readable: { $0.mapString(withEncoding: encoding) },
-            writeable: { $0.mapString(withEncoding: encoding) }
+            writable: { $0.mapString(withEncoding: encoding) }
         )
     }
     

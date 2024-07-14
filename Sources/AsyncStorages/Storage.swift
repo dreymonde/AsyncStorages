@@ -7,6 +7,8 @@
 
 import Foundation
 
+// MARK: - StorageDesign
+
 public protocol StorageDesign {
     var storageName: String { get }
 }
@@ -17,7 +19,9 @@ extension StorageDesign {
     }
 }
 
-public protocol Storage<Key, Value>: ReadableStorage, WriteableStorage { }
+// MARK: - Storage Protocols
+
+public protocol Storage<Key, Value>: ReadableStorage, WritableStorage { }
 
 public protocol UpdateableStorage<Key, Value>: Storage {
     @discardableResult
@@ -27,13 +31,15 @@ public protocol UpdateableStorage<Key, Value>: Storage {
     ) async throws -> Value
 }
 
-public struct ComposedStorage<Readable: ReadableStorage, Writeable: WriteableStorage>: Storage where Readable.Key == Writeable.Key, Readable.Value == Writeable.Value {
+// MARK: - Composed Storage
+
+public struct ComposedStorage<Readable: ReadableStorage, Writable: WritableStorage>: Storage where Readable.Key == Writable.Key, Readable.Value == Writable.Value {
     public let readable: Readable
-    public let writeable: Writeable
+    public let writable: Writable
     
-    public init(readable: Readable, writeable: Writeable) {
+    public init(readable: Readable, writable: Writable) {
         self.readable = readable
-        self.writeable = writeable
+        self.writable = writable
     }
     
     public func retrieve(forKey key: Readable.Key) async throws -> Readable.Value {
@@ -41,18 +47,22 @@ public struct ComposedStorage<Readable: ReadableStorage, Writeable: WriteableSto
     }
     
     public func set(_ value: Readable.Value, forKey key: Readable.Key) async throws {
-        try await writeable.set(value, forKey: key)
+        try await writable.set(value, forKey: key)
     }
 }
 
+// MARK: - Storage Transformations
+
 public extension Storage {
-    func transformingStorages<NewReadable: ReadOnlyStorage, NewWriteable: WriteOnlyStorage>(
+    func transformingStorages<NewReadable: ReadOnlyStorage, NewWritable: WriteOnlyStorage>(
         readable: (ReadOnly<Self>) -> NewReadable,
-        writeable: (WriteOnly<Self>) -> NewWriteable
-    ) -> ComposedStorage<NewReadable, NewWriteable> where NewReadable.Key == NewWriteable.Key, NewReadable.Value == NewWriteable.Value {
-        return ComposedStorage(readable: readable(readOnly()), writeable: writeable(writeOnly()))
+        writable: (WriteOnly<Self>) -> NewWritable
+    ) -> ComposedStorage<NewReadable, NewWritable> where NewReadable.Key == NewWritable.Key, NewReadable.Value == NewWritable.Value {
+        return ComposedStorage(readable: readable(readOnly()), writable: writable(writeOnly()))
     }
 }
+
+// MARK: Map
 
 public extension Storage {
     func mapValues<OtherValue>(
@@ -62,7 +72,7 @@ public extension Storage {
     ) -> ComposedStorage<MappedValuesReadOnlyStorage<ReadOnly<Self>, OtherValue>, MappedValuesWriteOnlyStorage<WriteOnly<Self>, OtherValue>> {
         transformingStorages(
             readable: { $0.mapValues(mapTo) },
-            writeable: { $0.mapValues(mapFrom) }
+            writable: { $0.mapValues(mapFrom) }
         )
     }
     
@@ -72,7 +82,7 @@ public extension Storage {
     ) -> ComposedStorage<MappedKeysReadOnlyStorage<ReadOnly<Self>, KeyFrom>, MappedKeysWriteOnlyStorage<WriteOnly<Self>, KeyFrom>> {
         transformingStorages(
             readable: { $0.mapKeys(transform) },
-            writeable: { $0.mapKeys(transform) }
+            writable: { $0.mapKeys(transform) }
         )
     }
     
@@ -81,24 +91,28 @@ public extension Storage {
     }
 }
 
+// MARK: Recover
+
 public extension Storage {
     func recover(with recovery: @escaping (Error) async throws -> Value) -> some Storage<Key, Value> {
         transformingStorages(
             readable: { $0.recover(with: recovery) },
-            writeable: { $0 }
+            writable: { $0 }
         )
     }
 }
 
-public protocol NonFallibleStorage<Key, Value>: NonFallibleReadableStorage, WriteableStorage { }
+// MARK: - Non-Fallible Storage
 
-public struct ComposedNonFallibleStorage<Readable: NonFallibleReadableStorage, Writeable: WriteableStorage>: NonFallibleStorage where Readable.Key == Writeable.Key, Readable.Value == Writeable.Value {
+public protocol NonFallibleStorage<Key, Value>: NonFallibleReadableStorage, WritableStorage { }
+
+public struct ComposedNonFallibleStorage<Readable: NonFallibleReadableStorage, Writable: WritableStorage>: NonFallibleStorage where Readable.Key == Writable.Key, Readable.Value == Writable.Value {
     public let readable: Readable
-    public let writeable: Writeable
+    public let writable: Writable
     
-    public init(readable: Readable, writeable: Writeable) {
+    public init(readable: Readable, writable: Writable) {
         self.readable = readable
-        self.writeable = writeable
+        self.writable = writable
     }
     
     public func retrieve(forKey key: Readable.Key) async -> Readable.Value {
@@ -106,16 +120,16 @@ public struct ComposedNonFallibleStorage<Readable: NonFallibleReadableStorage, W
     }
     
     public func set(_ value: Readable.Value, forKey key: Readable.Key) async throws {
-        try await writeable.set(value, forKey: key)
+        try await writable.set(value, forKey: key)
     }
 }
 
 public extension Storage {
-    func transformingStorages<NewReadable: NonFallibleReadableStorage, NewWriteable: WriteOnlyStorage>(
+    func transformingStorages<NewReadable: NonFallibleReadableStorage, NewWritable: WriteOnlyStorage>(
         readable: (ReadOnly<Self>) -> NewReadable,
-        writeable: (WriteOnly<Self>) -> NewWriteable
-    ) -> ComposedNonFallibleStorage<NewReadable, NewWriteable> where NewReadable.Key == NewWriteable.Key, NewReadable.Value == NewWriteable.Value {
-        return ComposedNonFallibleStorage(readable: readable(readOnly()), writeable: writeable(writeOnly()))
+        writable: (WriteOnly<Self>) -> NewWritable
+    ) -> ComposedNonFallibleStorage<NewReadable, NewWritable> where NewReadable.Key == NewWritable.Key, NewReadable.Value == NewWritable.Value {
+        return ComposedNonFallibleStorage(readable: readable(readOnly()), writable: writable(writeOnly()))
     }
 }
 
@@ -123,7 +137,7 @@ public extension Storage {
     func recover(with recovery: @escaping (Error) async -> Value) -> some NonFallibleStorage<Key, Value> {
         transformingStorages(
             readable: { $0.recover(with: recovery) },
-            writeable: { $0 }
+            writable: { $0 }
         )
     }
     

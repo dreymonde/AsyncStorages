@@ -1,21 +1,21 @@
 import Foundation
 
-public protocol WriteableStorage<Key, Value>: StorageDesign {
+public protocol WritableStorage<Key, Value>: StorageDesign {
     associatedtype Key
     associatedtype Value
     
     func set(_ value: Value, forKey key: Key) async throws
 }
 
-extension WriteableStorage where Key == Void {
+extension WritableStorage where Key == Void {
     public func set(_ value: Value) async throws {
         try await set(value, forKey: ())
     }
 }
 
-public protocol WriteOnlyStorage<Key, Value>: WriteableStorage { }
+public protocol WriteOnlyStorage<Key, Value>: WritableStorage { }
 
-public struct WriteOnly<Underlying: WriteableStorage>: WriteOnlyStorage {
+public struct WriteOnly<Underlying: WritableStorage>: WriteOnlyStorage {
     public let underlying: Underlying
     
     public init(underlying: Underlying) {
@@ -27,13 +27,13 @@ public struct WriteOnly<Underlying: WriteableStorage>: WriteOnlyStorage {
     }
 }
 
-public extension WriteableStorage {
+public extension WritableStorage {
     func writeOnly() -> WriteOnly<Self> {
         return WriteOnly(underlying: self)
     }
 }
 
-public struct MappedValuesWriteOnlyStorage<Underlying: WriteableStorage, ValueFrom>: WriteOnlyStorage {
+public struct MappedValuesWriteOnlyStorage<Underlying: WritableStorage, ValueFrom>: WriteOnlyStorage {
     public let underlying: Underlying
     public let transform: (ValueFrom) async throws -> Underlying.Value
     
@@ -57,7 +57,7 @@ extension WriteOnlyStorage {
     }
 }
 
-public struct MappedKeysWriteOnlyStorage<Underlying: WriteableStorage, KeyFrom>: WriteOnlyStorage {
+public struct MappedKeysWriteOnlyStorage<Underlying: WritableStorage, KeyFrom>: WriteOnlyStorage {
     public let underlying: Underlying
     public let transform: (KeyFrom) async throws -> Underlying.Key
     

@@ -27,7 +27,7 @@ public func zip<S1: Storage, S2: Storage>(
 ) -> ComposedStorage<Zip2ReadOnlyStorage<ReadOnly<S1>, ReadOnly<S2>>, Zip2WriteOnlyStorage<WriteOnly<S1>, WriteOnly<S2>>> where S1.Key == S2.Key {
     lhs.transformingStorages(
         readable: { zip($0, rhs.readOnly()) },
-        writeable: { zip($0, rhs.writeOnly()) }
+        writable: { zip($0, rhs.writeOnly()) }
     )
 }
 

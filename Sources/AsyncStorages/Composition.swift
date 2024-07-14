@@ -13,8 +13,8 @@ extension ReadOnlyStorage {
     }
 }
 
-extension WriteableStorage {
-    public func pushing<Back : WriteableStorage>(to storage: Back) -> PushingWriteOnlyStorage<Self, Back> where Back.Key == Key, Back.Value == Value {
+extension WritableStorage {
+    public func pushing<Back : WritableStorage>(to storage: Back) -> PushingWriteOnlyStorage<Self, Back> where Back.Key == Key, Back.Value == Value {
         PushingWriteOnlyStorage(front: self, back: storage)
     }
 }
@@ -60,7 +60,7 @@ public struct BackedReadOnlyStorage<Front: ReadOnlyStorage, Back: ReadableStorag
     }
 }
 
-public struct PushingWriteOnlyStorage<Front: WriteableStorage, Back: WriteableStorage>: WriteOnlyStorage where Front.Key == Back.Key, Front.Value == Back.Value {
+public struct PushingWriteOnlyStorage<Front: WritableStorage, Back: WritableStorage>: WriteOnlyStorage where Front.Key == Back.Key, Front.Value == Back.Value {
     
     public typealias Key = Front.Key
     public typealias Value = Front.Value
@@ -88,6 +88,32 @@ public struct CombinedStorage<Front: Storage, Back: Storage>: Storage where Fron
     public typealias Value = Front.Value
     
     public let front: Front
+    public let backed: BackedStorage<Front, Back>
+    
+    public init(front: Front, back: Back) {
+        self.front = front
+        self.backed = front.backed(by: back)
+    }
+
+    public var storageName: String {
+        "\(front.storageName)<->\(backed.back.storageName)"
+    }
+    
+    public func retrieve(forKey key: Front.Key) async throws -> Front.Value {
+        try await backed.retrieve(forKey: key)
+    }
+    
+    public func set(_ value: Front.Value, forKey key: Front.Key) async throws {
+        try await front.set(value, forKey: key)
+        try await backed.back.set(value, forKey: key)
+    }
+}
+
+public struct BackedStorage<Front: Storage, Back: ReadableStorage>: Storage where Front.Key == Back.Key, Front.Value == Back.Value {
+    public typealias Key = Front.Key
+    public typealias Value = Front.Value
+    
+    public let front: Front
     public let back: Back
     
     public init(front: Front, back: Back) {
@@ -96,7 +122,7 @@ public struct CombinedStorage<Front: Storage, Back: Storage>: Storage where Fron
     }
 
     public var storageName: String {
-        "\(front.storageName)<->\(back.storageName)"
+        "\(front.storageName)<-\(back.storageName)"
     }
     
     public func retrieve(forKey key: Front.Key) async throws -> Front.Value {
@@ -108,7 +134,7 @@ public struct CombinedStorage<Front: Storage, Back: Storage>: Storage where Fron
                 let backed = try await back.retrieve(forKey: key)
                 do {
                     try await self.set(backed, forKey: key)
-                } catch { 
+                } catch {
                     shallows_print("Storage (\(front.storageName) failed to set backed value from \(back.storageName). returning value anyway")
                 }
                 return backed
@@ -116,32 +142,6 @@ public struct CombinedStorage<Front: Storage, Back: Storage>: Storage where Fron
                 throw firstError
             }
         }
-    }
-    
-    public func set(_ value: Front.Value, forKey key: Front.Key) async throws {
-        try await front.set(value, forKey: key)
-        try await back.set(value, forKey: key)
-    }
-}
-
-public struct BackedStorage<Front: Storage, Back: Storage>: Storage where Front.Key == Back.Key, Front.Value == Back.Value {
-    public typealias Key = Front.Key
-    public typealias Value = Front.Value
-    
-    public let front: Front
-    public let combined: CombinedStorage<Front, Back>
-    
-    public init(front: Front, back: Back) {
-        self.front = front
-        self.combined = front.combined(with: back)
-    }
-
-    public var storageName: String {
-        "\(front.storageName)<-\(combined.back.storageName)"
-    }
-    
-    public func retrieve(forKey key: Front.Key) async throws -> Front.Value {
-        try await combined.retrieve(forKey: key)
     }
     
     public func set(_ value: Front.Value, forKey key: Front.Key) async throws {
