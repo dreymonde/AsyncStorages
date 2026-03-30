@@ -8,22 +8,47 @@
 import Foundation
 
 extension ReadOnlyStorage {
+    /// Creates a read-only storage that falls back to another storage when this one fails to retrieve a value.
+    ///
+    /// The original error from `self` is preserved if the fallback storage also fails.
+    ///
+    /// - Parameter storage: The fallback storage to query after this storage misses.
+    /// - Returns: A storage that reads from `self` first and then from `storage`.
     public func backed<Readable: ReadableStorage>(by storage: Readable) -> BackedReadOnlyStorage<Self, Readable> where Readable.Key == Key, Readable.Value == Value {
         return BackedReadOnlyStorage(front: self, back: storage)
     }
 }
 
 extension WritableStorage {
+    /// Creates a write-only storage that forwards every write to both storages.
+    ///
+    /// Writes are performed on `self` first, then on `storage`.
+    ///
+    /// - Parameter storage: The secondary storage that also receives each write.
+    /// - Returns: A storage that duplicates writes to both destinations.
     public func pushing<Back : WritableStorage>(to storage: Back) -> PushingWriteOnlyStorage<Self, Back> where Back.Key == Key, Back.Value == Value {
         PushingWriteOnlyStorage(front: self, back: storage)
     }
 }
 
 extension Storage {
+    /// Creates a storage that reads through a backing storage and writes to both storages.
+    ///
+    /// Reads prefer `self` and fall back to `backStorage`. Writes are sent to both storages.
+    ///
+    /// - Parameter backStorage: The secondary storage used for read fallback and mirrored writes.
+    /// - Returns: A combined storage built from the two storages.
     public func combined<Back: Storage>(with backStorage: Back) -> CombinedStorage<Self, Back> where Back.Key == Key, Back.Value == Value {
         CombinedStorage(front: self, back: backStorage)
     }
     
+    /// Creates a storage that falls back to another storage for reads while keeping writes local.
+    ///
+    /// When a value is found in the backing storage, this storage attempts to cache it into `self`
+    /// before returning it.
+    ///
+    /// - Parameter backStorage: The storage to query after `self` fails to retrieve a value.
+    /// - Returns: A storage that reads from `self` first and writes only to `self`.
     public func backed<Back: Storage>(by backStorage: Back) -> BackedStorage<Self, Back> where Back.Key == Key, Back.Value == Value {
         BackedStorage(front: self, back: backStorage)
     }

@@ -7,27 +7,27 @@
 
 import Foundation
 
-final actor ActorSafe<Wrapped> {
+public final actor ActorSafe<Wrapped> {
     
     private var value: Wrapped
     
-    init(_ value: Wrapped) {
+    public init(_ value: Wrapped) {
         self.value = value
     }
     
-    func get() -> Wrapped {
+    public func get() -> Wrapped {
         value
     }
     
-    func set(_ newValue: Wrapped) {
+    public func set(_ newValue: Wrapped) {
         value = newValue
     }
     
-    func write<T>(with block: (inout Wrapped) -> T) -> T {
+    public func write<T>(with block: (inout Wrapped) -> T) -> T {
         return block(&value)
     }
     
-    func write<T>(with block: (inout Wrapped) throws -> T) throws -> T {
+    public func write<T>(with block: (inout Wrapped) throws -> T) throws -> T {
         return try block(&value)
     }
 }

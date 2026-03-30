@@ -7,19 +7,23 @@
 
 import Foundation
 
-struct DictionaryValueMissingForKey<Key: Hashable>: Error {
-    let key: Key
+public struct DictionaryValueMissingForKey<Key: Hashable>: Error {
+    public let key: Key
+    
+    public init(key: Key) {
+        self.key = key
+    }
 }
 
-final class MemoryStorage<Key: Hashable, Value>: UpdateableStorage {
+public final class MemoryStorage<Key: Hashable, Value>: UpdateableStorage {
     
     private var dictionary: ActorSafe<[Key: Value]>
     
-    init(dictionary: [Key : Value] = [:]) {
+    public init(dictionary: [Key : Value] = [:]) {
         self.dictionary = ActorSafe(dictionary)
     }
     
-    func retrieve(forKey key: Key) async throws -> Value {
+    public func retrieve(forKey key: Key) async throws -> Value {
         if let value = await dictionary.get()[key] {
             return value
         } else {
@@ -27,11 +31,11 @@ final class MemoryStorage<Key: Hashable, Value>: UpdateableStorage {
         }
     }
     
-    func set(_ value: Value, forKey key: Key) async throws {
+    public func set(_ value: Value, forKey key: Key) async throws {
         await dictionary.write(with: { $0[key] = value })
     }
     
-    func update(forKey key: Key, _ modify: @escaping (inout Value) -> ()) async throws -> Value {
+    public func update(forKey key: Key, _ modify: @escaping (inout Value) -> ()) async throws -> Value {
         try await dictionary.write { dict in
             if var existing = dict[key] {
                 modify(&existing)
@@ -43,7 +47,7 @@ final class MemoryStorage<Key: Hashable, Value>: UpdateableStorage {
         }
     }
     
-    var _wrappedStorages: [any StorageDesign] {
+    public var _wrappedStorages: [any StorageDesign] {
         []
     }
 }
