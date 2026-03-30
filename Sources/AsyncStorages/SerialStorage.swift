@@ -51,9 +51,9 @@ public final class SerialStorage<Underlying: Storage>: UpdateableStorage {
         _ modify: @escaping (inout Underlying.Value) -> ()
     ) async throws -> Underlying.Value {
         try await asyncQueue.await {
-            var value = try await self.retrieve(forKey: key)
+            var value = try await self.underlyingStorage.retrieve(forKey: key)
             modify(&value)
-            try await self.set(value, forKey: key)
+            try await self.underlyingStorage.set(value, forKey: key)
             return value
         }
     }
