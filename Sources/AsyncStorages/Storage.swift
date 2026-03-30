@@ -49,6 +49,28 @@ public protocol UpdateableStorage<Key, Value>: Storage {
     ) async throws -> Value
 }
 
+struct UpdateUnavailableForNonUpdateableStorages: Error { }
+
+extension Storage {
+    @available(*, unavailable, message: "You are trying to use `update()` on a non-Updateable storage. Use `.serial()` first to make this storage serial & updateable, after which you can use `update()`")
+    func update(
+        forKey key: Key,
+        _ modify: @escaping (inout Value) -> ()
+    ) async throws -> Value {
+        throw UpdateUnavailableForNonUpdateableStorages()
+    }
+}
+
+extension NonFallibleStorage {
+    @available(*, unavailable, message: "You are trying to use `update()` on a non-Updateable storage. Use `.serial()` first to make this storage serial & updateable, after which you can use `update()`")
+    func update(
+        forKey key: Key,
+        _ modify: @escaping (inout Value) -> ()
+    ) async throws -> Value {
+        throw UpdateUnavailableForNonUpdateableStorages()
+    }
+}
+
 // MARK: - Composed Storage
 
 public struct ComposedStorage<Readable: ReadableStorage, Writable: WritableStorage>: Storage where Readable.Key == Writable.Key, Readable.Value == Writable.Value {

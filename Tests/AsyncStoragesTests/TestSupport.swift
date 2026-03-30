@@ -162,3 +162,34 @@ struct DiskTestContext {
         try? FileManager.default.removeItem(at: rootURL)
     }
 }
+
+func readme() async throws {
+    struct User: Codable {
+        var isActive = false
+    }
+    
+    let userStorage = MemoryStorage<String, User>()
+    try await userStorage.update(forKey: "123") { user in
+        user.isActive = true
+    }
+let memoryStorage = MemoryStorage<String, Int>()
+let defaulting = memoryStorage.defaulting(to: 0)
+let protected = memoryStorage.recover { error in
+    switch error {
+    case is MemoryStorageValueMissingForKey<String>:
+        return 15
+    default:
+        return -1
+    }
+}
+    
+    do {
+let storage = MemoryStorage<String, [Int]>()
+try await storage
+    .defaulting(to: [])
+    .serial()
+    .update(forKey: "first") {
+        $0.append(10)
+    }
+    }
+}

@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct DictionaryValueMissingForKey<Key: Hashable>: Error {
+public struct MemoryStorageValueMissingForKey<Key: Hashable>: Error {
     public let key: Key
     
     public init(key: Key) {
@@ -27,7 +27,7 @@ public final class MemoryStorage<Key: Hashable, Value>: UpdateableStorage {
         if let value = await dictionary.get()[key] {
             return value
         } else {
-            throw DictionaryValueMissingForKey(key: key)
+            throw MemoryStorageValueMissingForKey(key: key)
         }
     }
     
@@ -35,6 +35,7 @@ public final class MemoryStorage<Key: Hashable, Value>: UpdateableStorage {
         await dictionary.write(with: { $0[key] = value })
     }
     
+    @discardableResult
     public func update(forKey key: Key, _ modify: @escaping (inout Value) -> ()) async throws -> Value {
         try await dictionary.write { dict in
             if var existing = dict[key] {
@@ -42,7 +43,7 @@ public final class MemoryStorage<Key: Hashable, Value>: UpdateableStorage {
                 dict[key] = existing
                 return existing
             } else {
-                throw DictionaryValueMissingForKey(key: key)
+                throw MemoryStorageValueMissingForKey(key: key)
             }
         }
     }
