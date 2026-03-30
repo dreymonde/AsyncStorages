@@ -8,14 +8,45 @@
 import Foundation
 
 extension DiskStorage {
+    /// Creates a disk folder storage pointing to a specified folder
+    ///
+    /// - Note: `DiskFolderStorage` uses `Filename` as keys. If you need to use `String`
+    /// as a key instead, call `usingStringKeys()` to map to `Storage<String, Data>`
+    ///
+    /// - Parameters:
+    ///   - folderName: This folder will be created inside `directory`. Make sure it is a valid name
+    ///   - directory: See `FileManager.SearchPathDirectory` for reference
+    ///   - domainMask: `.userDomainMask` by default
+    ///   - filenameEncoder: `Filename.Encoder` instance used to encode filenames
+    ///   into a disk-safe string. `.base64URL` encoder is used by default
     public func folder(
         _ folderName: String,
         in directory: FileManager.SearchPathDirectory,
         domainMask: FileManager.SearchPathDomainMask = .userDomainMask,
-        filenameEncoder: Filename.Encoder
+        filenameEncoder: Filename.Encoder = .base64URL
     ) -> DiskFolderStorage {
         let directoryURL = DiskFolderStorage.url(forFolder: folderName, in: directory, domainMask: domainMask)
         return DiskFolderStorage(folderURL: directoryURL, diskStorage: self, filenameEncoder: filenameEncoder)
+    }
+    
+    /// Creates a disk folder storage pointing to a specified folder
+    ///
+    /// - Note: `DiskFolderStorage` uses `Filename` as keys. If you need to use `String`
+    /// as a key instead, call `usingStringKeys()` to map to `Storage<String, Data>`
+    ///
+    /// - Parameters:
+    ///   - folderName: This folder will be created inside `directory`. Make sure it is a valid name
+    ///   - directory: See `FileManager.SearchPathDirectory` for reference
+    ///   - domainMask: `.userDomainMask` by default
+    ///   - filenameEncoder: `Filename.Encoder` instance used to encode filenames
+    ///   into a disk-safe string. `.base64URL` encoder is used by default
+    public static func folder(
+        _ folderName: String,
+        in directory: FileManager.SearchPathDirectory,
+        domainMask: FileManager.SearchPathDomainMask = .userDomainMask,
+        filenameEncoder: Filename.Encoder = .base64URL
+    ) -> DiskFolderStorage {
+        DiskStorage.shared.folder(folderName, in: directory, domainMask: domainMask, filenameEncoder: filenameEncoder)
     }
 }
 
@@ -39,13 +70,17 @@ public final class DiskFolderStorage: UpdateableStorage {
         self.diskStorage = diskStorage
         self.folderURL = folderURL
         self.filenameEncoder = filenameEncoder
-        self.storageName = "disk-\(folderURL.lastPathComponent)"
+        self.storageName = "disk-folder-\(folderURL.lastPathComponent)"
     }
     
     deinit {
         if clearsOnDeinit {
             clear()
         }
+    }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [diskStorage]
     }
     
     public func clear() {

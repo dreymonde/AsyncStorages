@@ -42,10 +42,6 @@ public struct BackedReadOnlyStorage<Front: ReadOnlyStorage, Back: ReadableStorag
         self.back = back
     }
     
-    public var storageName: String {
-        "\(front.storageName)<-\(back.storageName)"
-    }
-    
     public func retrieve(forKey key: Key) async throws -> Value {
         do {
             return try await front.retrieve(forKey: key)
@@ -57,6 +53,10 @@ public struct BackedReadOnlyStorage<Front: ReadOnlyStorage, Back: ReadableStorag
                 throw firstError
             }
         }
+    }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [front, back]
     }
 }
 
@@ -73,13 +73,13 @@ public struct PushingWriteOnlyStorage<Front: WritableStorage, Back: WritableStor
         self.back = back
     }
     
-    public var storageName: String {
-        "\(front.storageName)->\(back.storageName)"
-    }
-    
     public func set(_ value: Front.Value, forKey key: Front.Key) async throws {
         try await front.set(value, forKey: key)
         try await back.set(value, forKey: key)
+    }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [front, back]
     }
 }
 
@@ -94,10 +94,6 @@ public struct CombinedStorage<Front: Storage, Back: Storage>: Storage where Fron
         self.front = front
         self.backed = front.backed(by: back)
     }
-
-    public var storageName: String {
-        "\(front.storageName)<->\(backed.back.storageName)"
-    }
     
     public func retrieve(forKey key: Front.Key) async throws -> Front.Value {
         try await backed.retrieve(forKey: key)
@@ -106,6 +102,10 @@ public struct CombinedStorage<Front: Storage, Back: Storage>: Storage where Fron
     public func set(_ value: Front.Value, forKey key: Front.Key) async throws {
         try await front.set(value, forKey: key)
         try await backed.back.set(value, forKey: key)
+    }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [front, backed.back]
     }
 }
 
@@ -119,10 +119,6 @@ public struct BackedStorage<Front: Storage, Back: ReadableStorage>: Storage wher
     public init(front: Front, back: Back) {
         self.front = front
         self.back = back
-    }
-
-    public var storageName: String {
-        "\(front.storageName)<-\(back.storageName)"
     }
     
     public func retrieve(forKey key: Front.Key) async throws -> Front.Value {
@@ -146,5 +142,9 @@ public struct BackedStorage<Front: Storage, Back: ReadableStorage>: Storage wher
     
     public func set(_ value: Front.Value, forKey key: Front.Key) async throws {
         try await front.set(value, forKey: key)
+    }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [front, back]
     }
 }

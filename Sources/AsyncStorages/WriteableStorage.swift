@@ -25,6 +25,10 @@ public struct WriteOnly<Underlying: WritableStorage>: WriteOnlyStorage {
     public func set(_ value: Underlying.Value, forKey key: Underlying.Key) async throws {
         try await underlying.set(value, forKey: key)
     }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [underlying]
+    }
 }
 
 public extension WritableStorage {
@@ -45,6 +49,10 @@ public struct MappedValuesWriteOnlyStorage<Underlying: WritableStorage, ValueFro
     public func set(_ value: ValueFrom, forKey key: Underlying.Key) async throws {
         let transformedValue = try await transform(value)
         try await underlying.set(transformedValue, forKey: key)
+    }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [underlying]
     }
 }
 
@@ -69,6 +77,10 @@ public struct MappedKeysWriteOnlyStorage<Underlying: WritableStorage, KeyFrom>: 
     public func set(_ value: Underlying.Value, forKey key: KeyFrom) async throws {
         let originalKey = try await transform(key)
         try await underlying.set(value, forKey: originalKey)
+    }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [underlying]
     }
 }
 

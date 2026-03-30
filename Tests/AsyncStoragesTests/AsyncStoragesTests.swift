@@ -1,12 +1,32 @@
-import XCTest
+import Testing
 @testable import AsyncStorages
 
-final class AsyncStoragesTests: XCTestCase {
-    func testExample() throws {
-        // XCTest Documentation
-        // https://developer.apple.com/documentation/xctest
+@Test func example() throws {
+}
 
-        // Defining Test Cases and Test Methods
-        // https://developer.apple.com/documentation/xctest/defining_test_cases_and_test_methods
-    }
+@Test func reachToFindsWrappedStorages() throws {
+    let diskStorage = DiskStorage.folder("_test", in: .applicationSupportDirectory)
+        .usingStringKeys()
+        .mapJSON()
+    let memoryStorage = MemoryStorage<String, Any>()
+    let combinedStorage = memoryStorage.combined(with: diskStorage)
+
+    print(combinedStorage._storageHierarchy())
+    #expect(combinedStorage._reach(toFirst: DiskFolderStorage.self) != nil)
+    #expect(combinedStorage._reach(toFirst: DiskStorage.self) != nil)
+    #expect(combinedStorage._reach(toFirst: RawDiskStorage.self) != nil)
+}
+
+@Test func obscureHidesWrappedStorages() throws {
+    let diskStorage = DiskStorage.folder("_test", in: .applicationSupportDirectory)
+        .usingStringKeys()
+        .mapJSON()
+    let memoryStorage = MemoryStorage<String, Any>()
+    let combinedStorage = memoryStorage.combined(with: diskStorage)
+        .obscureWrappedStorages()
+
+    print(combinedStorage._storageHierarchy())
+    #expect(combinedStorage._reach(toFirst: DiskFolderStorage.self) == nil)
+    #expect(combinedStorage._reach(toFirst: DiskStorage.self) == nil)
+    #expect(combinedStorage._reach(toFirst: RawDiskStorage.self) == nil)
 }

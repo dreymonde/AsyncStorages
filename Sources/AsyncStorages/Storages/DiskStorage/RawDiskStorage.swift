@@ -7,19 +7,31 @@
 
 import Foundation
 
+/// Using `RawDiskStorage` is not recommended. For most scenarios, use `DiskStorage`
+///
+/// - Warning: `RawDiskStorage` provides no serialization of operations,
+/// so race conditions are a serious risk. `DiskStorage` wraps `RawDiskStorage`
+/// to `.serial()` to prevent this. Using `RawDiskStorage` is not recommended
+/// unless you now exactly what you're doing
 public final class RawDiskStorage: Storage {
     
     public typealias Key = URL
     public typealias Value = Data
     
     public var storageName: String {
-        return "disk"
+        return "raw-disk"
     }
     
     private let fileManager = FileManager.default
     
     internal let creatingDirectories: Bool
     
+    /// Using `RawDiskStorage` is not recommended. For most scenarios, use `DiskStorage`
+    ///
+    /// - Warning: `RawDiskStorage` provides no serialization of operations,
+    /// so race conditions are a serious risk. `DiskStorage` wraps `RawDiskStorage`
+    /// to `.serial()` to prevent this. Using `RawDiskStorage` is not recommended
+    /// unless you now exactly what you're doing
     public init(creatingDirectories: Bool = true) {
         self.creatingDirectories = creatingDirectories
     }
@@ -64,5 +76,9 @@ public final class RawDiskStorage: Storage {
                 throw Error.cantCreateDirectory(error)
             }
         }
+    }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        []
     }
 }

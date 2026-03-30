@@ -32,6 +32,10 @@ public struct ReadOnly<Underlying: ReadableStorage>: ReadOnlyStorage {
     public func retrieve(forKey key: Underlying.Key) async throws -> Underlying.Value {
         try await underlying.retrieve(forKey: key)
     }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [underlying]
+    }
 }
 
 public extension ReadableStorage {
@@ -51,6 +55,10 @@ public struct MappedValuesReadOnlyStorage<Underlying: ReadableStorage, ValueTo>:
     
     public func retrieve(forKey key: Underlying.Key) async throws -> ValueTo {
         return try await transform(try await underlying.retrieve(forKey: key))
+    }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [underlying]
     }
 }
 
@@ -75,6 +83,10 @@ public struct MappedKeysReadOnlyStorage<Underlying: ReadableStorage, KeyFrom>: R
     public func retrieve(forKey key: KeyFrom) async throws -> Underlying.Value {
         let originalKey = try await transform(key)
         return try await underlying.retrieve(forKey: originalKey)
+    }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [underlying]
     }
 }
 
@@ -120,6 +132,10 @@ public struct RecoverableReadOnlyStorage<Underlying: ReadableStorage>: ReadOnlyS
             return try await recover(error)
         }
     }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [underlying]
+    }
 }
 
 extension ReadOnlyStorage {
@@ -143,6 +159,10 @@ public struct RecoverableNonFallibleReadOnlyStorage<Underlying: ReadableStorage>
         } catch {
             return await recover(error)
         }
+    }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [underlying]
     }
 }
 

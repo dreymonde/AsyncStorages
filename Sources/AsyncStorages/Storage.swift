@@ -10,7 +10,25 @@ import Foundation
 // MARK: - StorageDesign
 
 public protocol StorageDesign {
+    associatedtype Key
+    associatedtype Value
+    
+    /// Descriptive name of the storage. Useful for debugging
+    ///
+    /// Do not rely on `storageName` being stable / persistent. `storageName` is
+    /// useful for debugging and understanding the structure of the storage you're
+    /// interacting with, but not much else
+    ///
+    /// If you're creating your own `Storage`, provide a descriptive name here
     var storageName: String { get }
+    
+    /// If this storage wraps some other storage, this parameter will give
+    /// access to them. If this is a leaf storage, the array will be empty
+    ///
+    /// If you're creating your own `Storage`, provide all the other storages you're
+    /// wrapping in this parameter, or an empty array if you're creating a storage
+    /// from scratch.
+    var _wrappedStorages: [any StorageDesign] { get }
 }
 
 extension StorageDesign {
@@ -48,6 +66,10 @@ public struct ComposedStorage<Readable: ReadableStorage, Writable: WritableStora
     
     public func set(_ value: Readable.Value, forKey key: Readable.Key) async throws {
         try await writable.set(value, forKey: key)
+    }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [readable, writable]
     }
 }
 
@@ -121,6 +143,10 @@ public struct ComposedNonFallibleStorage<Readable: NonFallibleReadableStorage, W
     
     public func set(_ value: Readable.Value, forKey key: Readable.Key) async throws {
         try await writable.set(value, forKey: key)
+    }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [readable, writable]
     }
 }
 

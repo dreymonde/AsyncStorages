@@ -49,6 +49,10 @@ public struct Zip2ReadOnlyStorage<S1: ReadOnlyStorage, S2: ReadOnlyStorage>: Rea
         async let value2 = await storage2.retrieve(forKey: key)
         return await (try value1, try value2)
     }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [storage1, storage2]
+    }
 }
 
 public struct Zip2WriteOnlyStorage<S1: WriteOnlyStorage, S2: WriteOnlyStorage>: WriteOnlyStorage where S1.Key == S2.Key {
@@ -68,5 +72,9 @@ public struct Zip2WriteOnlyStorage<S1: WriteOnlyStorage, S2: WriteOnlyStorage>: 
         async let setResult1: () = storage1.set(value.0, forKey: key)
         async let setResult2: () = storage2.set(value.1, forKey: key)
         _ = try await (setResult1, setResult2)
+    }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [storage1, storage2]
     }
 }

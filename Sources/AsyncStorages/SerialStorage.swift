@@ -29,10 +29,6 @@ public final class SerialStorage<Underlying: Storage>: UpdateableStorage {
     public let underlyingStorage: Underlying
     public let asyncQueue = StoragesAsyncQueue()
     
-    public var storageName: String {
-        "serial-\(underlyingStorage.storageName)"
-    }
-    
     public init(underlyingStorage: Underlying) {
         self.underlyingStorage = underlyingStorage
     }
@@ -61,15 +57,15 @@ public final class SerialStorage<Underlying: Storage>: UpdateableStorage {
             return value
         }
     }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [underlyingStorage]
+    }
 }
 
 public final class SerialReadOnlyStorage<Underlying: ReadableStorage>: ReadOnlyStorage {
     public let underlyingStorage: Underlying
     public let asyncQueue = StoragesAsyncQueue()
-    
-    public var storageName: String {
-        "serial-\(underlyingStorage.storageName)"
-    }
     
     public init(underlyingStorage: Underlying) {
         self.underlyingStorage = underlyingStorage
@@ -80,15 +76,15 @@ public final class SerialReadOnlyStorage<Underlying: ReadableStorage>: ReadOnlyS
             try await self.underlyingStorage.retrieve(forKey: key)
         }
     }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [underlyingStorage]
+    }
 }
 
 public final class SerialWriteOnlyStorage<Underlying: WritableStorage>: WriteOnlyStorage {
     public let underlyingStorage: Underlying
     public let asyncQueue = StoragesAsyncQueue()
-    
-    public var storageName: String {
-        "serial-\(underlyingStorage.storageName)"
-    }
     
     public init(underlyingStorage: Underlying) {
         self.underlyingStorage = underlyingStorage
@@ -98,5 +94,9 @@ public final class SerialWriteOnlyStorage<Underlying: WritableStorage>: WriteOnl
         try await asyncQueue.await {
             try await self.underlyingStorage.set(value, forKey: key)
         }
+    }
+    
+    public var _wrappedStorages: [any StorageDesign] {
+        [underlyingStorage]
     }
 }

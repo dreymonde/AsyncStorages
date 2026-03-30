@@ -42,4 +42,8 @@ final class MemoryStorage<Key: Hashable, Value>: UpdateableStorage {
             }
         }
     }
+    
+    var _wrappedStorages: [any StorageDesign] {
+        []
+    }
 }
