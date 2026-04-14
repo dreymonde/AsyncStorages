@@ -5,7 +5,7 @@
 //  Created by Oleg on 3/30/26.
 //
 
-#if canImport(Darwin)
+#if os(iOS) || os(macOS) || os(tvOS) || os(visionOS)
 import Foundation
 
 extension URLSessionStorage {
