@@ -49,7 +49,7 @@ extension Storage {
     ///
     /// - Parameter backStorage: The storage to query after `self` fails to retrieve a value.
     /// - Returns: A storage that reads from `self` first and writes only to `self`.
-    public func backed<Back: Storage>(by backStorage: Back) -> BackedStorage<Self, Back> where Back.Key == Key, Back.Value == Value {
+    public func backed<Back: ReadableStorage>(by backStorage: Back) -> BackedStorage<Self, Back> where Back.Key == Key, Back.Value == Value {
         BackedStorage(front: self, back: backStorage)
     }
 }
